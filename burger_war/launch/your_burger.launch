@@ -4,14 +4,21 @@
 
     <!-- You can change control program  -->
 
+    <!-- main program -->
+    <node pkg="burger_war" type="burger_war_main.py" name="burger_war_main" output="screen"/>
 
-    <!-- sample program node -->
+    <!-- navigation -->
+    <include file="$(find burger_navigation)/launch/burger_navigation.launch"/>
 
-    <node pkg="burger_war" type="randomRun.py" name="randomRun" output="screen"/>
+    <!-- /scan based enemy detection -->
+    <include file="$(find burger_war)/launch/obstacle_detector.launch"/>
+    <node pkg="burger_war" type="enemy_detector.py" name="enemy_detector_node" output="screen"/>
 
-    <!-- END sample program node -->
+    <!-- remove noise(ex. transparent pole) from a /scan -->
+    <node pkg="burger_war" type="scan_trimer.py" name="scan_trimer_node" output="screen"/>
 
-
-    <!-- End of your space  -->
+    <!-- observe the maker's state and publish it -->
+    <node pkg="burger_war" type="targets_publisher.py" name="marker_status_publisher_node" output="screen"/>
+    
 </launch>
 
