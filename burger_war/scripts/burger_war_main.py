@@ -13,20 +13,20 @@ import roslib.packages
 from geometry_msgs.msg    import Twist
 from std_msgs.msg         import Float32
 
-rospy.init_node("burger_war_main_node")#smath_filesでtfを使用するため,init_nodeする前にtf_listerner()があるとエラー
+rospy.init_node('burger_war_main_node')#smath_filesでtfを使用するため,init_nodeする前にtf_listerner()があるとエラー
 from smach_files          import *
 
 # Global変数
-target_location_global = ""
+target_location_global = ''
 
 
 class Commander(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=["move", "fight", "commander", "game_finish"])
+        smach.State.__init__(self, outcomes=['move', 'fight', 'commander', 'game_finish'])
 
         #Northは敵陣なので現状は行かない.
-        self.check_points     = ["south_center", "south_left", "south_right", "west_center", "west_left", "west_right", "east_left", "east_center", "east_right"]
+        self.check_points     = ['south_center', 'south_left', 'south_right', 'west_center', 'west_left', 'west_right', 'east_left', 'east_center', 'east_right']
         self.last_notice_time = rospy.Time.now()
         self.is_enemy_close   = False
 
@@ -41,25 +41,23 @@ class Commander(smach.State):
         global target_location_global
 
         try:
-            target_frame_name = rospy.get_param('~robot_name',"") + '/enemy_closest'
-            source_frame_name = rospy.get_param('~robot_name',"") + "/base_footprint"
-            (trans,rot) = self.tf_listener.lookupTransform(source_frame_name, target_frame_name, rospy.Time(0))
+            trans, rot = self.tf_listener.lookupTransform('/base_footprint', '/enemy_closest', rospy.Time(0))
             length = math.sqrt(pow(trans[0], 2) + pow(trans[1], 2))
             self.is_enemy_close = True if length < 0.90 else False
         except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            rospy.logerr("TF lookup error [base_footprint -> enemy_closest]")
+            rospy.logerr('TF lookup error [base_footprint -> enemy_closest]')
             self.is_enemy_close = False
 
         #各状況に合わせて状態遷移
         if self.is_enemy_close == True:
-            return "fight"
+            return 'fight'
         elif len(self.check_points) > 0:
             target_location_global = self.check_points[0]
             self.check_points.pop(0)
-            return "move"
+            return 'move'
         else:
             rospy.sleep(0.1)
-            return "commander"
+            return 'commander'
 
     def enemy_callback(self, msg):
         notice_length = 0.90
@@ -72,56 +70,47 @@ class Commander(smach.State):
         elif msg.data > notice_length and self.is_enemy_close == True:
             self.is_enemy_close == False
 
+
 class Move(smach.State):
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=["finish"])
+        smach.State.__init__(self, outcomes=['finish'])
 
     def execute(self, userdata):
         global target_location_global
 
         goal = json_util.generate_movebasegoal_from_locationname(target_location_global)
-        overlaytext.publish("Move to " + target_location_global)
+        overlaytext.publish('Move to ' + target_location_global)
 
-        #globalパスを取得し、パス先の方向に回転する.　->　回転は背後取られることがあったのでパス.
-        """
-        move_base.send_goal(goal)
-        rotate_goal = move_base.calculate_rotate_goal_from_global_path(3.0, 0.5)
-        move_base.cancel_goal()
-        if rotate_goal != False:
-            move_base.send_goal_and_wait_result(rotate_goal)
-        """
         #移動開始
         result = move_base.send_goal_and_wait_result(goal)
 
         if result == True:
-            rospy.loginfo("Turtlebot reached at [" + target_location_global + "].")
-            overlaytext.publish("Turtlebot reached at [" + target_location_global + "].")
+            rospy.loginfo('Turtlebot reached at [' + target_location_global + '].')
+            overlaytext.publish('Turtlebot reached at [' + target_location_global + '].')
         else:
-            rospy.loginfo("Moving Failed [" + target_location_global + "].")
-            overlaytext.publish("Moving Failed [" + target_location_global + "].")
+            rospy.loginfo('Moving Failed [' + target_location_global + '].')
+            overlaytext.publish('Moving Failed [' + target_location_global + '].')
             #self.check_points.append(target_location_global)
 
-        return "finish"
+        return 'finish'
 
 class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカーをとりに行く。（実装予定）
 
     def __init__(self):
-        smach.State.__init__(self, outcomes=["finish"])
+        smach.State.__init__(self, outcomes=['finish'])
         self.tf_listener = tf.TransformListener()
         self.pub_twist   = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def execute(self, userdata):
 
-        overlaytext.publish("STATE: Fight")
+        overlaytext.publish('STATE: Fight')
 
         while True:
             try:
-                target_frame_name = rospy.get_param('~robot_name',"") + '/enemy_closest'
-                source_frame_name = rospy.get_param('~robot_name',"") + "/base_footprint"
-                (trans,rot) = self.tf_listener.lookupTransform(source_frame_name, target_frame_name, rospy.Time(0))
+                trans, rot = self.tf_listener.lookupTransform('/base_footprint', '/enemy_closest', rospy.Time(0))
             except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-                rospy.logerr("TF lookup error [base_footprint -> enemy_closest]")
+                rospy.logerr('TF lookup error [base_footprint -> enemy_closest]')
                 rospy.sleep(1)
                 break
 
@@ -141,21 +130,21 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
             self.pub_twist.publish(Twist())
 
         rospy.sleep(1)
-        return "finish"
+        return 'finish'
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
 
-    rospy.init_node("burger_war_main_node")
-    rospy.loginfo("Start burger war main program.")
+    rospy.init_node('burger_war_main_node')
+    rospy.loginfo('Start burger war main program.')
 
-    sm = smach.StateMachine(outcomes=["Game_finish"])
+    sm = smach.StateMachine(outcomes=['Game_finish'])
     with sm:
-        smach.StateMachine.add("Commander", Commander(), transitions={"move": "Move", "fight": "Fight", "commander": "Commander", "game_finish": "Game_finish"})
-        smach.StateMachine.add("Move",  Move(),  transitions={"finish": "Commander"})
-        smach.StateMachine.add("Fight", Fight(), transitions={"finish": "Commander"})
+        smach.StateMachine.add('Commander', Commander(), transitions={'move': 'Move', 'fight': 'Fight', 'commander': 'Commander', 'game_finish': 'Game_finish'})
+        smach.StateMachine.add('Move',  Move(),  transitions={'finish': 'Commander'})
+        smach.StateMachine.add('Fight', Fight(), transitions={'finish': 'Commander'})
 
-    sis = smach_ros.IntrospectionServer("server", sm, "/BURGER_WAR_TASK")
+    sis = smach_ros.IntrospectionServer('server', sm, '/BURGER_WAR_TASK')
     sis.start()
     sm.execute()
     sis.stop()
