@@ -40,13 +40,7 @@ class Commander(smach.State):
     def execute(self, userdata):
         global target_location_global
 
-        try:
-            trans, rot = self.tf_listener.lookupTransform('/base_footprint', '/enemy_closest', rospy.Time(0))
-            length = math.sqrt(pow(trans[0], 2) + pow(trans[1], 2))
-            self.is_enemy_close = True if length < 0.90 else False
-        except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-            rospy.logerr('TF lookup error [base_footprint -> enemy_closest]')
-            self.is_enemy_close = False
+        self.is_enemy_close = True if tf_util.get_the_length_to_enemy() < 0.90 else False
 
         #各状況に合わせて状態遷移
         if self.is_enemy_close == True:
@@ -86,20 +80,16 @@ class Move(smach.State):
         result = move_base.send_goal_and_wait_result(goal)
 
         if result == True:
-            rospy.loginfo('Turtlebot reached at [' + target_location_global + '].')
             overlaytext.publish('Turtlebot reached at [' + target_location_global + '].')
         else:
-            rospy.loginfo('Moving Failed [' + target_location_global + '].')
             overlaytext.publish('Moving Failed [' + target_location_global + '].')
-            #self.check_points.append(target_location_global)
 
         return 'finish'
 
-class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカーをとりに行く。（実装予定）
+class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカーをトラッキング
 
     def __init__(self):
         smach.State.__init__(self, outcomes=['finish'])
-        self.tf_listener = tf.TransformListener()
         self.pub_twist   = rospy.Publisher('cmd_vel', Twist, queue_size=10)
 
     def execute(self, userdata):
@@ -107,19 +97,14 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
         overlaytext.publish('STATE: Fight')
 
         while True:
-            try:
-                trans, rot = self.tf_listener.lookupTransform('/base_footprint', '/enemy_closest', rospy.Time(0))
-            except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
-                rospy.logerr('TF lookup error [base_footprint -> enemy_closest]')
-                rospy.sleep(1)
+            
+            if tf_util.get_the_length_to_enemy() > 0.90:
                 break
 
-            len = math.sqrt(pow(trans[0], 2) + pow(trans[1], 2))
-            if len > 0.90:
-                break
-
+            # Twistのpublish
             send_data = Twist()
-            send_data.angular.z = math.atan2(trans[1], trans[0]) * 1.5
+            send_data.angular.z = tf_util.get_the_radian_to_enemy() * 1.5
+
             if math.degrees(send_data.angular.z) > 100:
                 send_data.angular.z = math.radians(100)
             elif math.degrees(send_data.angular.z) < -100:
