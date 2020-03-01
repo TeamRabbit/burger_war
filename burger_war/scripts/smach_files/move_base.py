@@ -47,7 +47,7 @@ def pub_initialpose_for_burger_war():
 
     send_data = PoseWithCovarianceStamped()
     send_data.header.frame_id = rospy.get_param('~robot_name',"") + '/map'
-    send_data.pose.pose.position.x = -1.4
+    send_data.pose.pose.position.x = -1.3
     send_data.pose.pose.position.y = 0
     send_data.pose.pose.position.z = 0
     send_data.pose.pose.orientation.x = 0
