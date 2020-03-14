@@ -1,6 +1,6 @@
 {
     "FriedShrimp_S": {
-        "option": "null",
+        "option": "south",
         "rotation": {
             "w": 1.0,
             "x": 0.0,
@@ -14,7 +14,7 @@
         }
     },
     "FriedShrimp_W": {
-        "option": "null",
+        "option": "west",
         "rotation": {
             "w": 0.7104980070753281,
             "x": 0.0,
@@ -28,7 +28,7 @@
         }
     },
     "FriedShrimp_E": {
-        "option": "null",
+        "option": "east",
         "rotation": {
             "w": 0.7128784472980007,
             "x": 0.0,
@@ -42,7 +42,7 @@
         }
     },
     "FriedShrimp_N": {
-        "option": "null",
+        "option": "north",
         "rotation": {
             "w": 0.006409917340792927,
             "x": 0.0,
@@ -56,7 +56,7 @@
         }
     },
     "Omelette_S": {
-        "option": "null",
+        "option": "east",
         "rotation": {
             "w": 1.0,
             "x": 0.0,
@@ -70,7 +70,7 @@
         }
     },
     "Omelette_N": {
-        "option": "null",
+        "option": "north",
         "rotation": {
             "w": -0.009432536470152958,
             "x": 0.0,
@@ -84,7 +84,7 @@
         }
     },
     "Tomato_S": {
-        "option": "null",
+        "option": "west",
         "rotation": {
             "w": 0.9999640981751954,
             "x": 0.0,
@@ -98,7 +98,7 @@
         }
     },
     "Tomato_N": {
-        "option": "null",
+        "option": "north",
         "rotation": {
             "w": -0.006097283306844488,
             "x": 0.0,
@@ -112,7 +112,7 @@
         }
     },
     "OctopusWiener_N": {
-        "option": "null",
+        "option": "east",
         "rotation": {
             "w": 0.006943955073405896,
             "x": 0.0,
@@ -126,7 +126,7 @@
         }
     },
     "OctopusWiener_S": {
-        "option": "null",
+        "option": "south",
         "rotation": {
             "w": 0.9999826997062456,
             "x": 0.0,
@@ -140,7 +140,7 @@
         }
     },
     "Pudding_N": {
-        "option": "null",
+        "option": "west",
         "rotation": {
             "w": 1.5587682106760498e-07,
             "x": 0.0,
@@ -154,7 +154,7 @@
         }
     },
     "Pudding_S": {
-        "option": "null",
+        "option": "south",
         "rotation": {
             "w": 0.9999999999999793,
             "x": 0.0,

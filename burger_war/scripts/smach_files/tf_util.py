@@ -24,3 +24,13 @@ def get_the_radian_to_enemy():
         return 0.0 #敵が検出されない場合
 
     return math.atan2(trans[1],trans[0])
+
+
+def get_the_my_point():
+    try:
+        trans,rot = tf_listener.lookupTransform('/map', '/base_footprint', rospy.Time(0))
+    except (tf.LookupException, tf.ConnectivityException, tf.ExtrapolationException):
+        rospy.logerr('TF lookup error [base_footprint -> enemy_closest]')
+        return 0.0, 0.0
+        
+    return trans[0], trans[1]
