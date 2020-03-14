@@ -84,9 +84,10 @@ class Move(smach.State):
                 move_base.cancel_goal()
                 print "detect a enemy."
                 break
-            elif maker.get_my_last_get_maker_name() == target_location_global:
+            elif maker.is_maker_mine(target_location_global) == True:
                 move_base.cancel_goal()
                 overlaytext.publish("Get the [" + target_location_global + "].")
+                rospy.sleep(1.0)
                 break
             else:
                 pass

@@ -27,7 +27,11 @@ def get_next_location_name():
 
 
 def get_my_last_get_maker_name():
-    return my_last_get_maker_name
+    global previous_my_markers_name_list
+    if location_name in previous_my_markers_name_list:
+        return True
+    else:
+        return False
 
 
 def get_erea_name(location_name):
