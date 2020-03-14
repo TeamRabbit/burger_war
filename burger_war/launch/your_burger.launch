@@ -5,7 +5,7 @@
     <!-- You can change control program  -->
 
     <!-- main program -->
-    <node pkg="burger_war" type="burger_war_main.py" name="burger_war_main" output="screen"/>
+    <node pkg="burger_war" type="burger_war_main_final.py" name="burger_war_main" output="screen"/>
 
     <!-- navigation -->
     <include file="$(find burger_navigation)/launch/burger_navigation.launch"/>

@@ -51,24 +51,21 @@ class Commander(smach.State):
     def execute(self, userdata):
         global target_location_global
 
-        self.is_enemy_close = True if tf_util.get_the_length_to_enemy() < 0.90 else False
+        self.is_enemy_close = True if tf_util.get_the_length_to_enemy() < 0.80 else False
 
         #各状況に合わせて状態遷移
         if self.is_enemy_close == True:
             return "fight"
-        elif len(self.check_points) > 0:
-            target_location_global = self.check_points[0]
-            self.check_points.pop(0)
-            return "move"
         else:
-            rospy.sleep(0.1)
-            return "commander"
+            target_location_global = maker.get_next_location_name()
+            return "move"
 
 
 class Move(smach.State):
 
     def __init__(self):
         smach.State.__init__(self, outcomes=["finish"])
+        self.notice_length = 0.8
 
     def execute(self, userdata):
         global target_location_global
@@ -77,12 +74,22 @@ class Move(smach.State):
         overlaytext.publish("Move to " + target_location_global)
 
         #移動開始
-        result = move_base.send_goal_and_wait_result(goal)
-
-        if result == True:
-            overlaytext.publish("Turtlebot reached at [" + target_location_global + "].")
-        else:
-            overlaytext.publish("Moving Failed [" + target_location_global + "].")
+        move_base.send_goal(goal)
+        
+        start_moving_time = rospy.Time.now()
+        while start_moving_time + rospy.Duration(25) > rospy.Time.now():
+            rospy.sleep(0.5)
+            print maker.get_my_last_get_maker_name()
+            if tf_util.get_the_length_to_enemy() < self.notice_length:
+                move_base.cancel_goal()
+                print "detect a enemy."
+                break
+            elif maker.get_my_last_get_maker_name() == target_location_global:
+                move_base.cancel_goal()
+                overlaytext.publish("Get the [" + target_location_global + "].")
+                break
+            else:
+                pass
 
         return "finish"
 
@@ -92,12 +99,13 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
     def __init__(self):
         smach.State.__init__(self, outcomes=["finish"])
         self.angular_weight = 1.50
-        self.notice_length  = 0.90
+        self.notice_length  = 0.80
 
     def execute(self, userdata):
 
         while True:
 
+            move_base.cancel_goal()
             overlaytext.publish("STATE: Fight\nlength = " + str(tf_util.get_the_length_to_enemy())[:6])
             if tf_util.get_the_length_to_enemy() > self.notice_length:
                 break

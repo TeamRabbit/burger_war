@@ -2,6 +2,8 @@
 # coding: utf-8
 import sys
 import rospy
+import roslib
+import json
 import copy
 import math
 from burger_war.msg     import MarkerList
@@ -14,8 +16,8 @@ file_path = roslib.packages.get_pkg_dir('burger_war') + "/location_list/target_l
 file = open(file_path, 'r')
 location_list_dict = json.load(file)
 
-my_last_get_maker_name           = ""#何かで初期化すべき
-enemy_last_get_maker_name        = ""
+my_last_get_maker_name           = "FriedShrimp_S"#何かで初期化すべき
+enemy_last_get_maker_name        = "FriedShrimp_N"
 previous_my_markers_name_list    = []
 previous_enemy_markers_name_list = []
 next_target_location = ""
@@ -24,7 +26,13 @@ def get_next_location_name():
     return next_target_location
 
 
+def get_my_last_get_maker_name():
+    return my_last_get_maker_name
+
+
 def get_erea_name(location_name):
+    #print location_name
+    #print location_list_dict[location_name]["option"]
     return location_list_dict[location_name]["option"]
 
 
@@ -68,6 +76,8 @@ def get_location_weight(target_location, enemy_location):
 
 
 def cb_marker_status(msg):
+    global previous_enemy_markers_name_list, previous_my_markers_name_list
+    global enemy_last_get_maker_name, my_last_get_maker_name, next_target_location
 
     enemy_markers_name_list = []
     none_markers_name_list  = []
@@ -84,11 +94,11 @@ def cb_marker_status(msg):
 
     #最後に取得したマーカー情報を獲得
     for location_name in enemy_markers_name_list:
-        if location_name not in previous_enemy_markers_name_list
+        if location_name not in previous_enemy_markers_name_list:
             enemy_last_get_maker_name = location_name
             break
     for location_name in my_markers_name_list:
-        if location_name not in previous_my_markers_name_list
+        if location_name not in previous_my_markers_name_list:
             my_last_get_maker_name = location_name
             break
 
@@ -101,18 +111,24 @@ def cb_marker_status(msg):
     my_zone    = get_erea_name(my_last_get_maker_name)
 
     #各マーカーの優先度を評価
+    evaluate_location_name = enemy_markers_name_list
+    evaluate_location_name.extend(none_markers_name_list)
     location_value_dict = {}
-    for name in previous_enemy_markers_name_list:
+    for name in evaluate_location_name:
         evaluation_value = 1.0 if name in none_markers_name_list else 2.0 #noneのマーカは1点、敵のマーカは2点の評価
-        evaluation_value -= get_location_weight(name, enemy_last_get_maker_name)#敵に近いマーカーは評価を下げる
+        evaluation_value -= (2 * get_location_weight(name, enemy_last_get_maker_name))#敵に近いマーカーは評価を下げる
         evaluation_value += get_location_weight(name, my_last_get_maker_name)#自分に近いマーカーは評価を上げる
-        location_value_dict[name] = {evaluation_value}
+        location_value_dict[name] = evaluation_value
+
+    #print ("************************")
+    #for key, value in location_value_dict.items():
+        #print ("key = {}, name = {}".format(key, value))
 
     max_value = max(location_value_dict.values())
     for element_key, element_value in location_value_dict.items():
         if element_value == max_value:
             next_target_location = element_key
-            print ("next_target_location = {}".format(next_target_location))
+            #print ("next_target_location = {}".format(next_target_location))
             break
     #評価値が最も高い場所をリストアップ
     """
@@ -133,4 +149,4 @@ def cb_marker_status(msg):
 
 
 #sub_move_base_dummy_path   = rospy.Subscriber('move_base/DWAPlannerROS/global_plan', Path, cb_global_path)
-sub_makers_states          = rospy.Subscriber('/marker_status', GoalStatusArray, cb_marker_status)
+sub_makers_states          = rospy.Subscriber('/marker_status', MarkerList, cb_marker_status)

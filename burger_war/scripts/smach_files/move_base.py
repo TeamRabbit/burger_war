@@ -18,7 +18,7 @@ tf_listener     = tf.TransformListener()
 obtained_path = Path()
 
 def get_current_status():
-    data = ac_move_base_client.get_state();
+    data = ac_move_base_client.get_state()
     if len(data.status_list) > 0:
         current_status = action_goal_status[data.status_list[0].status]
         return current_status
@@ -29,7 +29,7 @@ def send_goal_and_wait_result(goal):
     else:
         ac_move_base_client.wait_for_server()
         ac_move_base_client.send_goal(goal)
-        result = ac_move_base_client.wait_for_result(rospy.Duration(25));
+        result = ac_move_base_client.wait_for_result(rospy.Duration(25))
         return result
 
 def send_goal(goal):
