@@ -3,6 +3,15 @@
   <arg name="side" default="r"/> <!-- "b" = blue side, "r" = red side  -->
 
     <!-- You can change control program  -->
+    <!-- make args to params -->
+    <group if="$(eval side=='r')">
+      <param name="/my_side"    value="r"/>
+      <param name="/enemy_side" value="b"/>
+    </group>
+    <group if="$(eval side=='b')">
+      <param name="/my_side" value="b"/>
+      <param name="/enemy_side" value="r"/>
+    </group>
 
     <!-- main program -->
     <node pkg="burger_war" type="burger_war_main_final.py" name="burger_war_main" output="screen"/>

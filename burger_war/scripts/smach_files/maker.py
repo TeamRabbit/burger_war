@@ -9,14 +9,16 @@ import math
 from burger_war.msg     import MarkerList
 from smach_files          import overlaytext, tf_util
 
-my_side    = rospy.get_param("/send_id_to_judge/side")
-enemy_side = "b" if my_side == "r" else "r"
+#陣地の情報を取得
+my_side    = rospy.get_param("/my_side",    "r")
+enemy_side = rospy.get_param("/enemy_side", "b")
 
 #location_listの読み込み
 file_path = roslib.packages.get_pkg_dir('burger_war') + "/location_list/target_list.json"
 file = open(file_path, 'r')
 location_list_dict = json.load(file)
 
+#global変数
 next_target_location             = ""
 enemy_last_get_maker_name        = ""
 previous_my_markers_name_list    = []
@@ -167,4 +169,4 @@ def cb_marker_status(msg):
     overlaytext.pub_maker_score(pub_text)
 
 
-sub_makers_states          = rospy.Subscriber('/marker_status', MarkerList, cb_marker_status)
+sub_makers_states = rospy.Subscriber('/marker_status', MarkerList, cb_marker_status)

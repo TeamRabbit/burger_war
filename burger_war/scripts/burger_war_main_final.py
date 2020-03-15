@@ -29,11 +29,12 @@ class Setup(smach.State):
 
         overlaytext.publish("Setup now ...")
         rospy.sleep(1)
+        my_side = rospy.get_param("/my_side", "r")
 
-        if rospy.get_param("/send_id_to_judge/side") == "r":
-            move_base.pub_initialpose_for_burger_war()
+        if my_side == "r":
+            move_base.pub_initialpose_for_red_side()
         else:
-            move_base.pub_initialpose_for_burger_war()
+            move_base.pub_initialpose_for_brue_side()
         
         rospy.sleep(1)
         return "finish"
@@ -78,7 +79,7 @@ class Move(smach.State):
         #移動開始
         move_base.send_goal(goal)        
         start_moving_time = rospy.Time.now()
-        
+
         while start_moving_time + rospy.Duration(25) > rospy.Time.now():
             rospy.sleep(0.5)
 
