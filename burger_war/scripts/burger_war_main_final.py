@@ -44,22 +44,24 @@ class Commander(smach.State):
     def __init__(self):
         smach.State.__init__(self, outcomes=["move", "fight", "commander", "game_finish"])
 
-        #Northは敵陣なので現状は行かない.
-        self.check_points     = ["south_center", "south_left", "south_right", "west_center", "west_left", "west_right", "east_left", "east_center", "east_right"]
-        self.is_enemy_close   = False
+        self.is_enemy_close = False
+        self.notice_length  = 0.8
 
     def execute(self, userdata):
         global target_location_global
 
-        self.is_enemy_close = True if tf_util.get_the_length_to_enemy() < 0.80 else False
+        self.is_enemy_close = True if tf_util.get_the_length_to_enemy() < self.notice_length else False
 
         #各状況に合わせて状態遷移
         if self.is_enemy_close == True:
             return "fight"
         else:
             target_location_global = maker.get_next_location_name()
-            return "move"
-
+            if target_location_global == "":
+                rospy.sleep(1)
+                return "commander"
+            else:
+                return "move"
 
 class Move(smach.State):
 
@@ -74,23 +76,26 @@ class Move(smach.State):
         overlaytext.publish("Move to " + target_location_global)
 
         #移動開始
-        move_base.send_goal(goal)
-        
+        move_base.send_goal(goal)        
         start_moving_time = rospy.Time.now()
+        
         while start_moving_time + rospy.Duration(25) > rospy.Time.now():
             rospy.sleep(0.5)
-            print maker.get_my_last_get_maker_name()
-            if tf_util.get_the_length_to_enemy() < self.notice_length:
+
+            if (tf_util.get_the_length_to_enemy() < self.notice_length) or (maker.get_next_location_name() != target_location_global):#敵が近づいてきた場合or目標地点が変化した場合
                 move_base.cancel_goal()
-                print "detect a enemy."
                 break
             elif maker.is_maker_mine(target_location_global) == True:
                 move_base.cancel_goal()
-                overlaytext.publish("Get the [" + target_location_global + "].")
+                overlaytext.publish("Get the maker[" + target_location_global + "].")
                 rospy.sleep(1.0)
                 break
-            else:
-                pass
+            elif move_base.get_current_status() == "SUCCEEDED":#到着したがマーカーを取れていない
+                twist.publish_back_twist()
+                break
+            elif move_base.get_current_status() != "SUCCEEDED" and move_base.get_current_status() != "ACTIVE":#slam失敗した場合
+                twist.publish_back_twist()
+                break
 
         return "finish"
 
@@ -104,11 +109,14 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
 
     def execute(self, userdata):
 
+        start_fight_time = rospy.Time.now()
         while True:
-
             move_base.cancel_goal()
             overlaytext.publish("STATE: Fight\nlength = " + str(tf_util.get_the_length_to_enemy())[:6])
             if tf_util.get_the_length_to_enemy() > self.notice_length:
+                break
+            elif start_fight_time + rospy.Duration(5) < rospy.Time.now():#10sでタイムアウト
+                twist.publish_back_twist()
                 break
 
             # Twistのpublish

@@ -19,3 +19,13 @@ def publish_rotate_twist(radian):
     pub_twist.publish(send_data)
     rospy.sleep(0.3)
     pub_twist.publish(Twist())
+
+
+def publish_back_twist():
+
+    send_data = Twist()
+    send_data.linear.x = -0.2
+
+    pub_twist.publish(send_data)
+    rospy.sleep(0.5)
+    pub_twist.publish(Twist())

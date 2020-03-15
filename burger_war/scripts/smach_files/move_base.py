@@ -19,9 +19,8 @@ obtained_path = Path()
 
 def get_current_status():
     data = ac_move_base_client.get_state()
-    if len(data.status_list) > 0:
-        current_status = action_goal_status[data.status_list[0].status]
-        return current_status
+    current_status = action_goal_status[data]
+    return current_status
 
 def send_goal_and_wait_result(goal):
     if type(goal) != type(MoveBaseGoal()):
