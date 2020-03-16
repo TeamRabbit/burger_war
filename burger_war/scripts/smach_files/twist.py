@@ -29,3 +29,13 @@ def publish_back_twist():
     pub_twist.publish(send_data)
     rospy.sleep(0.5)
     pub_twist.publish(Twist())
+
+
+def publish_forward_twist():
+
+    send_data = Twist()
+    send_data.linear.x = 0.2
+
+    pub_twist.publish(send_data)
+    rospy.sleep(0.5)
+    pub_twist.publish(Twist())

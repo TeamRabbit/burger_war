@@ -5,6 +5,7 @@ import random
 import tf
 import json
 import math
+import random
 import actionlib
 import actionlib_msgs
 import smach
@@ -29,13 +30,13 @@ class Setup(smach.State):
 
         overlaytext.publish("Setup now ...")
         rospy.sleep(1)
-        my_side = rospy.get_param("/my_side", "r")
+        my_side = rospy.get_param("/my_side")
 
         if my_side == "r":
             move_base.pub_initialpose_for_red_side()
         else:
-            move_base.pub_initialpose_for_brue_side()
-        
+            move_base.pub_initialpose_for_blue_side()
+
         rospy.sleep(1)
         return "finish"
 
@@ -80,7 +81,7 @@ class Move(smach.State):
         move_base.send_goal(goal)        
         start_moving_time = rospy.Time.now()
 
-        while start_moving_time + rospy.Duration(25) > rospy.Time.now():
+        while True:
             rospy.sleep(0.5)
 
             if (tf_util.get_the_length_to_enemy() < self.notice_length) or (maker.get_next_location_name() != target_location_global):#敵が近づいてきた場合or目標地点が変化した場合
@@ -95,7 +96,19 @@ class Move(smach.State):
                 twist.publish_back_twist()
                 break
             elif move_base.get_current_status() != "SUCCEEDED" and move_base.get_current_status() != "ACTIVE":#slam失敗した場合
-                twist.publish_back_twist()
+                move_base.cancel_goal()
+                if random.random() > 0.5:#slamに失敗した時だけガチャを引く
+                    twist.publish_back_twist()
+                else:
+                    twist.publish_forward_twist()
+                break
+            elif (start_moving_time + rospy.Duration(13)) < rospy.Time.now():
+                print "Move_Base Timeout"
+                move_base.cancel_goal()
+                if random.random() > 0.5:#slamに失敗した時だけガチャを引く
+                    twist.publish_back_twist()
+                else:
+                    twist.publish_forward_twist()
                 break
 
         return "finish"
@@ -116,7 +129,7 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
             overlaytext.publish("STATE: Fight\nlength = " + str(tf_util.get_the_length_to_enemy())[:6])
             if tf_util.get_the_length_to_enemy() > self.notice_length:
                 break
-            elif start_fight_time + rospy.Duration(5) < rospy.Time.now():#10sでタイムアウト
+            elif start_fight_time + rospy.Duration(3) < rospy.Time.now():#3sでタイムアウト
                 twist.publish_back_twist()
                 break
 

@@ -10,8 +10,10 @@ from burger_war.msg     import MarkerList
 from smach_files          import overlaytext, tf_util
 
 #陣地の情報を取得
-my_side    = rospy.get_param("/my_side",    "r")
-enemy_side = rospy.get_param("/enemy_side", "b")
+my_side    = rospy.get_param("/my_side")
+enemy_side = rospy.get_param("/enemy_side")
+print "my_side = {}".format(my_side)
+print "enemy_side = {}".format(enemy_side)
 
 #location_listの読み込み
 file_path = roslib.packages.get_pkg_dir('burger_war') + "/location_list/target_list.json"
