@@ -11,8 +11,9 @@ import actionlib_msgs
 import smach
 import smach_ros
 import roslib.packages
-from geometry_msgs.msg    import Twist
-from std_msgs.msg         import Float32
+from subprocess        import Popen
+from geometry_msgs.msg import Twist
+from std_msgs.msg      import Float32
 
 rospy.init_node("burger_war_main_node")#smath_filesでtfを使用するため,init_nodeする前にtf_listerner()があるとエラー
 from smach_files          import *
@@ -124,14 +125,22 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
     def execute(self, userdata):
 
         start_fight_time = rospy.Time.now()
+        cycle_start_time = rospy.Time.now()
+        cycle_count      = 0
         while True:
             move_base.cancel_goal()
             overlaytext.publish("STATE: Fight\nlength = " + str(tf_util.get_the_length_to_enemy())[:6])
             if tf_util.get_the_length_to_enemy() > self.notice_length:
                 break
-            elif start_fight_time + rospy.Duration(3) < rospy.Time.now():#3sでタイムアウト
-                twist.publish_back_twist()
+            elif start_fight_time + rospy.Duration(20) < rospy.Time.now() and maker.get_current_get_marker_num() >= 3 and maker.am_i_win() == False:#現状負けてて、自分が動いてマーカすべて取られてもKOにならない場合、敵を無視する
+                Popen(["rosnode", "kill", "/enemy_detector_node"])
+                print "\n\n無双モード\n\n"
                 break
+            elif cycle_start_time + rospy.Duration(3) < rospy.Time.now() and cycle_count < 5:#3sの周期で的に対し少し距離を置く
+                twist.publish_back_twist()
+                cycle_start_time = rospy.Time.now()
+                cycle_count += 1
+                #break
 
             # Twistのpublish
             target_angular = tf_util.get_the_radian_to_enemy() * self.angular_weight

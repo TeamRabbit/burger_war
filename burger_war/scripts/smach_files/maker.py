@@ -27,6 +27,20 @@ previous_my_markers_name_list    = []
 previous_enemy_markers_name_list = []
 
 
+def get_current_get_marker_num():
+    global previous_my_markers_name_list
+    print "get_current_get_marker_num = {}".format(len(previous_my_markers_name_list))
+    return len(previous_my_markers_name_list)
+
+
+def am_i_win():
+    global previous_my_markers_name_list, previous_enemy_markers_name_list
+    if len(previous_my_markers_name_list) > len(previous_enemy_markers_name_list):
+        return True
+    else:
+        return False
+
+
 def get_next_location_name():
     return next_target_location
 
@@ -161,6 +175,11 @@ def cb_marker_status(msg):
         if is_location_denger(get_erea_name(name), enemy_zone) == True:#敵が存在する場所には行かない
             evaluation_value = 0.0
         location_value_dict[name] = evaluation_value
+
+    if len(location_value_dict.keys()) == 0:
+        next_target_location = ""
+        return
+    
     sorted_location_value_dict = sorted(location_value_dict.items(), key=lambda x:x[1], reverse=True)
     next_target_location = sorted_location_value_dict[0][0]#最も評価が高い場所に移動する
     next_target_location = switch_location(next_target_location, my_zone, enemy_zone)#中継地点が必要な場合は目標値を入れ替える
