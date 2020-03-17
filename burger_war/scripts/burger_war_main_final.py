@@ -136,7 +136,7 @@ class Fight(smach.State):#敵が付近に存在する場合は、敵のマーカ
                 Popen(["rosnode", "kill", "/enemy_detector_node"])
                 print "\n\n無双モード\n\n"
                 break
-            elif cycle_start_time + rospy.Duration(3) < rospy.Time.now() and cycle_count < 5:#3sの周期で的に対し少し距離を置く
+            elif cycle_start_time + rospy.Duration(3) < rospy.Time.now() and cycle_count < 5 and maker.am_i_win() == False:#3sの周期で的に対し少し距離を置く
                 twist.publish_back_twist()
                 cycle_start_time = rospy.Time.now()
                 cycle_count += 1
